@@ -6,8 +6,9 @@ package Task_2.Crawl_Issue_Report;
  */
 public class App 
 {
-    public static void main( String[] args )
+    public static void main( String[] args ) throws InterruptedException
     {
-        System.out.println( "Hello World!" );
+        Crawler crawl = new Crawler();
+        crawl.CrawlIssueReport();
     }
 }
