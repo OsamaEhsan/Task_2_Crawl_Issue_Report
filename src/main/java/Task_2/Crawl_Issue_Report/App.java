@@ -9,6 +9,7 @@ public class App
     public static void main( String[] args ) throws InterruptedException
     {
         Crawler crawl = new Crawler();
-        crawl.CrawlIssueReport();
+        JIRAIssue issue =  crawl.CrawlIssueReport();
+        crawl.WritingDataToCSV(issue);
     }
 }

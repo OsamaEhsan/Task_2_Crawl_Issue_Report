@@ -1,22 +1,29 @@
 package Task_2.Crawl_Issue_Report;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.htmlunit.HtmlUnitDriver;
+
+import com.opencsv.CSVWriter;
 
 public class Crawler {
 
-	public void CrawlIssueReport() throws InterruptedException {
-		//System.setProperty("webdriver.chrome.driver", "C://chromedriver.exe");
-		//WebDriver driver = new ChromeDriver();
-		//System.setProperty("webdriver.chrome.driver","c://chrome1.exe");
-    	WebDriver driver;
-    	driver = new HtmlUnitDriver();
-		driver.get("https://issues.apache.org/jira/browse/CAMEL-10597");
-		//Thread.sleep(5000);  
+	public JIRAIssue CrawlIssueReport() throws InterruptedException {
+
+    	
+    	System.setProperty("webdriver.chrome.driver", "chromedriver.exe");
+    	WebDriver driver = new ChromeDriver();
+		driver.get("https://issues.apache.org/jira/browse/CAMEL-10597"); 
 		
 		//details
 		String type = driver.findElement(By.id("type-val")).getText();
@@ -30,15 +37,53 @@ public class Crawler {
 		//people
 		String assignee = driver.findElement(By.id("assignee-val")).getText();
 		String reporter = driver.findElement(By.id("reporter-val")).getText();
-		String votes = driver.findElement(By.id("vote-data")).getText();
-		String watchers = driver.findElement(By.id("watcher-data")).getText();
 		
+		//description
 		String description = driver.findElement(By.id("description-val")).getText();
+
+		List<WebElement> commentsElement = driver.findElements(By.xpath("//*[starts-with(@id,'comment-')]"));
 		
 		
+		
+		ArrayList<String> comments = new ArrayList<String>();
+		
+		for (int i = 0; i < commentsElement.size(); i++) {
+			comments.add(commentsElement.get(i).getText());
+		}
+		
+		JIRAIssue issue = new JIRAIssue(type, status, priority, resolution, affectsVersions,
+										fixVersions, components, assignee, reporter, 
+										description, comments);
 		
 		driver.quit();
-		
-		System.out.println("type: "+type+", Status: "+status);
+		return issue;
+	}
+	
+	
+	public void WritingDataToCSV(JIRAIssue issue) {
+		try 
+		{    
+			Writer writer = Files.newBufferedWriter(Paths.get("data.csv"));
+
+			CSVWriter csvWriter = new CSVWriter(writer,
+					CSVWriter.DEFAULT_SEPARATOR,
+					CSVWriter.NO_QUOTE_CHARACTER,
+					CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+					CSVWriter.DEFAULT_LINE_END);
+
+			String[] headerRecord = {"type", "status", "priority", "resolution", "affectsVersions",
+					"fixVersions", "components", "assignee", "reporter", "description", "comments"};
+			csvWriter.writeNext(headerRecord);
+
+			csvWriter.writeNext(new String[]{issue.getType(), issue.getStatus(), issue.getPriority(), issue.getResolution(), 
+					issue.getAffectsVersions(),	issue.getFixVersions(), issue.getComponents(), 
+					issue.getAssignee(), issue.getReporter(),
+					issue.getDescription(), issue.getComments()});
+
+			csvWriter.close();
+		} catch (IOException e) {
+
+			e.printStackTrace();
+		}
 	}
 }
